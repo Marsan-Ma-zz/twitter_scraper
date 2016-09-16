@@ -11,13 +11,8 @@ Scraping twitter content from [twitter streaming API](https://dev.twitter.com/st
 1. Copy the `config.yml.default` to `config.yml`, and fill your twitter application tokens you got from [twitter developers](https://apps.twitter.com/).
 
 
-2. Clone this repositiry and just type:  
-
-    python3 twitter.py
+2. just type    `python3 twitter.py`, the listener will start to dump corpus in: `corpus/<YYYYMMDD_HHMMSS.txt>`
     
-then the listener will start to dump corpus in: `corpus/<YYYYMMDD_HHMMSS.txt>`
-
-
 ### Output
 
 I build this corpus for training the neural network model [**ChatBot**](https://github.com/Marsan-Ma/tf_chatbot_seq2seq_antilm), thus the corpus is arranged as consecutive dialog where even sentences are the response of odd sentences, like:
