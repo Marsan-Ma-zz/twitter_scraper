@@ -1,4 +1,4 @@
-import os, sys, re, yaml, json
+import os, sys, re, yaml, json, argparse
 import tweepy
 import time
 import socket
@@ -18,12 +18,13 @@ MAX_TCPIP_TIMEOUT = 16
 
 class QueueListener(StreamListener):
 
-    def __init__(self):
+    def __init__(self, args):
         """Creates a new stream listener with an internal queue for tweets."""
         super(QueueListener, self).__init__()
         self.num_handled = 0
         self.queue = [] #Queue.Queue()
         self.batch_size = 100
+        self.lang = args.lang
 
         # tweepy
         cfg = yaml.load(open('config.yml', 'rt'))['twitter']
@@ -33,7 +34,7 @@ class QueueListener(StreamListener):
 
         # corpus file
         if not os.path.exists('corpus'): os.makedirs('corpus')
-        self.dumpfile = "corpus/%s.txt" % datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.dumpfile = "corpus/%s_%s.txt" % (self.lang, datetime.now().strftime("%Y%m%d_%H%M%S"))
         
 
     def on_data(self, data):
@@ -96,16 +97,26 @@ class QueueListener(StreamListener):
 
 
 def main():
+    # parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--lang', type=str, required=True, help='language: en/zh/ja')
+    args = parser.parse_args()
+
     # open stream
-    listener = QueueListener()
+    listener = QueueListener(args)
     stream = Stream(listener.auth, listener) #, language='zh')
 
     # [stream filter]
-    stream.filter(locations=[-122.75,36.8,-121.75,37.8, -74,40,-73,41])  # San Francisco or New York City
+    if args.lang == 'en':
+        stream.filter(locations=[-122.75,36.8,-121.75,37.8, -74,40,-73,41])  # San Francisco or New York City
+    elif args.lang == 'zh':
+        stream.filter(languages=["zh"], track=['I', 'you', 'http', 'www', 'co', '@', '#', '。', '，', '！', '.', '!', ',', ':', '：', '』', ')', '...', '我', '你', '他', '哈', '的', '是', '人', '-', '/'])
+    elif args.lang == 'ja':
+        stream.filter(languages=["ja"], track=['I', 'you', 'http', 'www', 'co', '@', '#', '。', '，', '！', '.', '!', ',', ':', '：', '』', ')', '...'])
     # stream.filter(locations=[-122.75,36.8,-121.75,37.8])  # San Francisco
     # stream.filter(locations=[-74,40,-73,41])  # New York City
     # stream.filter(languages=["en"], track=['python', 'obama', 'trump'])
-    # stream.filter(languages=["zh"], track=['I', 'you', 'http', 'www', 'co', '@', '#', '。', '，', '！', '.', '!', ',', ':', '：', '』', ')', '...', '我', '你', '他', '哈', '的', '是', '人', '-', '/'])
+    # 
     # stream.filter(languages=["zh"], locations=[-180,-90,180,90])
     # stream.filter(languages=["ja"], track=['バイト'])
 
